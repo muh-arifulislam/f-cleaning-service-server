@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema(
       enum: ["moderate", "admin"],
       default: "moderate",
     },
+    password: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true }
 );

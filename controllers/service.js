@@ -1,22 +1,28 @@
 import Service from "../models/Service.js";
-import mongoose from "mongoose";
 
 export const getServices = async (req, res) => {
   try {
     const services = await Service.find();
 
-    res.status(200).json(services);
+    return res.status(200).json({
+      success: true,
+      data: services,
+    });
   } catch (err) {
-    res.status(404).json({ messgae: err.message });
+    res.status(404).json({ success: false, message: err?.message });
   }
 };
+
 export const getService = async (req, res) => {
   try {
-    const id = req.params.id;
-    const service = await Service.findOne({ _id: new mongoose.Types.ObjectId(id) });
+    const { id } = req.params;
+    const service = await Service.findById(id);
 
-    res.status(200).json(service);
+    return res.status(200).json({
+      success: true,
+      data: service,
+    });
   } catch (err) {
-    res.status(404).json({ messgae: err.message });
+    return res.status(404).json({ success: false, message: err?.message });
   }
 };

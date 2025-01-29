@@ -4,9 +4,12 @@ import Review from "../models/Review.js";
 export const getReviews = async (req, res) => {
   try {
     const reviews = await Review.find();
-    res.status(200).json(reviews);
+    return res.status(200).json({
+      success: true,
+      data: reviews,
+    });
   } catch (err) {
-    res.status(404).json({ message: err.message });
+    return res.status(404).json({ success: false, message: err?.message });
   }
 };
 
@@ -16,51 +19,41 @@ export const addReview = async (req, res) => {
     const doc = req.body;
     const newReview = new Review({ ...doc, status: false });
     const result = await newReview.save();
-    res.status(200).json({ acknowledgement: true, review: result });
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(404).json({ error });
+    return res.status(404).json({ success: false, message: error?.message });
   }
 };
 
 // delete review
 export const deleteReview = async (req, res) => {
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
-    const id = req.params.id;
-    if (decoded.email === email) {
-      await Review.findByIdAndDelete(id);
-      return res.status(200).json({ deletedCount: 1 });
-    }
-    return res.status(401).json({ message: "unauthorized access" });
+    const { id } = req.params;
+    await Review.findByIdAndDelete(id);
+
+    return res.status(200).json({ success: true, data: null });
   } catch (err) {
-    res.status(404).json({ messgae: err.message });
+    return res.status(404).json({ success: false, message: err?.message });
   }
 };
 
 // update review
 export const updateReview = async (req, res) => {
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
-    const id = req.params.id;
+    const { id } = req.params;
     const updates = req.body;
-    if (decoded.email === email) {
-      // Use Mongoose's findByIdAndUpdate to update the document
-      const updatedDocument = await Review.findByIdAndUpdate(id, updates, {
-        new: true,
-      });
+    const updatedDocument = await Review.findByIdAndUpdate(id, updates, {
+      new: true,
+    });
 
-      if (!updatedDocument) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-
+    if (!updatedDocument) {
       return res
-        .status(200)
-        .json({ acknowledgement: true, data: updatedDocument });
+        .status(404)
+        .json({ success: false, message: "Document not found" });
     }
-    return res.status(401).json({ message: "unauthorized access" });
+
+    return res.status(200).json({ success: true, data: updatedDocument });
   } catch (error) {
-    return res.status(500).json({ error });
+    return res.status(500).json({ success: false, message: error?.message });
   }
 };

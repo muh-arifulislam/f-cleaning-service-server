@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose, Schema } from "mongoose";
 
 const CustomerSchema = new mongoose.Schema(
   {
@@ -13,19 +13,18 @@ const CustomerSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      unique: false,
-      required: false,
-      default: "",
+      default: null,
     },
     address: { type: String, required: true },
-    status: { type: Boolean },
+    orders: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Order",
+      },
+    ],
   },
   {
-    timestamps: {
-      createdAt: "createdAt", // Change the field name if needed
-      updatedAt: "updatedAt", // Change the field name if needed
-      timeZone: "Asia/Dhaka", // Set the timeZone option to 'Asia/Muscat' for Oman's time zone
-    },
+    timestamps: true,
   }
 );
 

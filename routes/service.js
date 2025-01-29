@@ -3,7 +3,8 @@ import { getService, getServices } from "../controllers/service.js";
 
 const router = express.Router();
 
-router.get("/services", getServices);
-router.get("/service/:id", getService);
+router.get("/", getServices);
+
+router.get("/:id", getService);
 
 export default router;

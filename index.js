@@ -5,12 +5,14 @@ import cors from "cors";
 import dotenv from "dotenv";
 // import helmet from "helmet";
 import morgan from "morgan";
+
 import serviceRoute from "./routes/service.js";
 import customerRoute from "./routes/customer.js";
 import reviewRoute from "./routes/review.js";
 import userRoute from "./routes/user.js";
 import showcaseRoute from "./routes/showcase.js";
-import generalRoute from "./routes/general.js";
+import authRoute from "./routes/auth.js";
+import orderRoute from "./routes/order.js";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -23,16 +25,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
-/* ROUTES */
-app.use("/", serviceRoute);
-app.use("/", customerRoute);
-app.use("/", reviewRoute);
-app.use("/", userRoute);
-app.use("/", showcaseRoute);
-app.use("/", generalRoute);
+app.get("/", async (req, res) => {
+  return res.send({ message: "application run successfully" });
+});
 
-/* STATIC ROUTES */
-app.use("/public/uploads/images", express.static("public/uploads/images"));
+/* ROUTES */
+app.use("/services", serviceRoute);
+app.use("/customers", customerRoute);
+app.use("/reviews", reviewRoute);
+app.use("/users", userRoute);
+app.use("/showcases", showcaseRoute);
+app.use("/orders", orderRoute);
+app.use("/auth", authRoute);
 
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 9000;

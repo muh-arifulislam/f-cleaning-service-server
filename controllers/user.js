@@ -3,32 +3,30 @@ import User from "../models/User.js";
 // get users
 export const getUsers = async (req, res) => {
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
-    if (decoded.email === email) {
-      const users = await User.find();
-      return res.status(200).json(users);
-    }
-    return res.status(401).json({ message: "unauthorized access" });
+    const users = await User.find();
+
+    return res.status(200).json({
+      success: true,
+      data: users,
+    });
   } catch (error) {
-    res.status(404).json(error);
+    return res.status(404).json({
+      success: false,
+      message: error?.message,
+    });
   }
 };
 
 // add customer
 export const addUser = async (req, res) => {
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
     const doc = req.body;
-    if (decoded.email === email) {
-      const newUser = new User(doc);
-      const result = await newUser.save();
-      return res.status(200).json({ acknowledgement: true, user: result });
-    }
-    res.status(401).json({ message: "unauthorized access" });
+    const newUser = new User(doc);
+    const result = await newUser.save();
+
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(404).json({ error });
+    return res.status(404).json({ error });
   }
 };
 
@@ -36,9 +34,35 @@ export const addUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const id = req.params.id;
-    const result = await User.findByIdAndDelete(id);
-    res.status(200).json({ deletedCount: 1 });
+    await User.findByIdAndDelete(id);
+
+    return res.status(200).json({ success: true, data: null });
   } catch (err) {
-    res.status(404).json({ messgae: err.message });
+    return res.status(404).json({ success: false, message: err?.message });
+  }
+};
+
+export const getUser = async (req, res) => {
+  try {
+    const { email } = req.decoded;
+
+    if (email) {
+      const result = await User.findOne({
+        email,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: result,
+      });
+    }
+
+    return res
+      .status(401)
+      .json({ success: false, message: "unauthorized access" });
+  } catch (error) {
+    return res
+      .status(404)
+      .json({ success: false, message: "something went wrong" });
   }
 };

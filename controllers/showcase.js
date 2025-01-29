@@ -1,55 +1,74 @@
+import { startSession } from "mongoose";
 import Showcase from "../models/Showcase.js";
-import { deleteImage } from "./general.js";
-import sharp from "sharp";
+import {
+  deleteFile,
+  deleteFromCloudinary,
+  sendImageToCloudinary,
+} from "../utils/sentImageToCloudinary.js";
 
 export const getShowcases = async (req, res) => {
   try {
     const showcases = await Showcase.find();
-    res.status(200).json(showcases);
+
+    return res.status(200).json({
+      success: true,
+      data: showcases,
+    });
   } catch (error) {
-    res.status(404).json({ error });
+    return res.status(404).json({ success: false, message: error?.message });
   }
 };
 
 export const addShowcase = async (req, res) => {
+  const file = req.file;
+  const payload = req.body;
+  const path = file?.path;
+
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
-    const doc = req.body;
-    const img = doc.img;
-    const resizedImg = "res-" + img;
-    if (decoded.email === email) {
-      await sharp(`./public/uploads/images/${img}`)
-        .resize({
-          fit: "fill",
-          width: 620,
-          height: 672,
-        })
-        .toFile(`./public/uploads/images/${resizedImg}`);
-      deleteImage(img);
-      const newShowcase = new Showcase({ ...doc, img: resizedImg });
-      const result = await newShowcase.save();
-      return res.status(200).json({ acknowledgement: true, showcase: result });
-    }
-    return res.status(401).json({ message: "unauthorized access!!" });
+    const imageName = `showcase${
+      Date.now() + "-" + Math.round(Math.random() * 1e9)
+    }`;
+    //send image to cloudinary
+    const { secure_url } = await sendImageToCloudinary(imageName, path);
+    payload.img = secure_url;
+
+    const newShowcase = new Showcase(payload);
+    const result = await newShowcase.save();
+
+    return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(404).json(error);
+    deleteFile(path);
+    res.status(404).json({
+      success: false,
+      message: error?.message,
+    });
   }
 };
 
 export const removeShowcase = async (req, res) => {
+  const session = await startSession();
   try {
-    const email = req.query.email;
-    const decoded = req.decoded;
+    session.startTransaction();
+
     const id = req.params.id;
-    const img = req.body.img;
-    if (decoded.email === email) {
-      deleteImage(img);
-      const result = await Showcase.findByIdAndDelete(id);
-      return res.status(200).json({ deletedCount: 1 });
+    const response = await Showcase.findByIdAndDelete([id], { session });
+    if (!response) {
+      throw new Error("Showcase not found");
     }
-    return res.status(401).json({ message: "unauthorized access!!" });
+
+    const filename = response?.img?.split("/").pop();
+    const publicId = filename.replace(/\.[^/.]+$/, "");
+    await deleteFromCloudinary(publicId);
+
+    await session.commitTransaction();
+    await session.endSession();
+    return res.status(200).json({ success: true, data: null });
   } catch (error) {
-    res.status(404).json(error);
+    await session.abortTransaction();
+    await session.endSession();
+    res.status(404).json({
+      success: false,
+      message: error?.message,
+    });
   }
 };
