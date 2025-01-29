@@ -1,10 +1,6 @@
 import { startSession } from "mongoose";
 import Showcase from "../models/Showcase.js";
-import {
-  deleteFile,
-  deleteFromCloudinary,
-  sendImageToCloudinary,
-} from "../utils/sentImageToCloudinary.js";
+import { deleteFromCloudinary } from "../utils/sentImageToCloudinary.js";
 
 export const getShowcases = async (req, res) => {
   try {
@@ -20,24 +16,13 @@ export const getShowcases = async (req, res) => {
 };
 
 export const addShowcase = async (req, res) => {
-  const file = req.file;
   const payload = req.body;
-  const path = file?.path;
 
   try {
-    const imageName = `showcase${
-      Date.now() + "-" + Math.round(Math.random() * 1e9)
-    }`;
-    //send image to cloudinary
-    const { secure_url } = await sendImageToCloudinary(imageName, path);
-    payload.img = secure_url;
-
     const newShowcase = new Showcase(payload);
     const result = await newShowcase.save();
-
     return res.status(200).json({ success: true, data: result });
   } catch (error) {
-    deleteFile(path);
     res.status(404).json({
       success: false,
       message: error?.message,
@@ -56,8 +41,7 @@ export const removeShowcase = async (req, res) => {
       throw new Error("Showcase not found");
     }
 
-    const filename = response?.img?.split("/").pop();
-    const publicId = filename.replace(/\.[^/.]+$/, "");
+    const publicId = response.imagePublicId;
     await deleteFromCloudinary(publicId);
 
     await session.commitTransaction();
