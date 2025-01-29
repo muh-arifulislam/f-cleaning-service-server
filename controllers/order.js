@@ -57,7 +57,10 @@ export const updateOrder = async (req, res) => {
       throw new Error("Order not found");
     }
 
-    const result = await Order.findByIdAndUpdate(id, payload);
+    const result = await Order.findByIdAndUpdate(id, payload, {
+      new: true,
+      runValidators: true,
+    });
     return res.status(200).json({ success: true, data: result });
   } catch (err) {
     return res.status(400).json({
