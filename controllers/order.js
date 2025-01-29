@@ -39,11 +39,11 @@ export const addOrder = async (req, res) => {
 
     await session.commitTransaction();
     await session.endSession();
-    return res.status(200).json({ acknowledgement: true });
+    return res.status(200).json({ success: true, data: orderRes });
   } catch (error) {
     await session.abortTransaction();
     await session.endSession();
-    res.status(404).json({ error });
+    res.status(404).json({ success: false, message: error?.message });
   }
 };
 
