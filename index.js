@@ -27,7 +27,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
-      "https://gocleanix.netlify.app/",
+      "https://gocleanix.netlify.app",
       "https://admin-gocleanix.netlify.app",
     ],
     credentials: true,
